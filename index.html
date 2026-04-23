@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Jogo da Velha com IA</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #111;
+      color: white;
+    }
+
+    .tabuleiro {
+      display: grid;
+      grid-template-columns: repeat(3, 100px);
+      gap: 5px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+
+    .casa {
+      width: 100px;
+      height: 100px;
+      background: #222;
+      font-size: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+
+    .casa:hover {
+      background: #333;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      background: green;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🤖 Jogo da Velha vs IA</h1>
+<div id="status">Sua vez (X)</div>
+
+<div class="tabuleiro" id="tabuleiro"></div>
+
+<button onclick="reiniciar()">Reiniciar</button>
+
+<script>
+let jogador = "X";
+let ia = "O";
+let jogoAtivo = true;
+let tabuleiro = ["", "", "", "", "", "", "", "", ""];
+
+const status = document.getElementById("status");
+const tabuleiroHTML = document.getElementById("tabuleiro");
+
+function criarTabuleiro() {
+  tabuleiroHTML.innerHTML = "";
+  tabuleiro.forEach((valor, index) => {
+    const casa = document.createElement("div");
+    casa.classList.add("casa");
+    casa.innerText = valor;
+
+    casa.addEventListener("click", () => jogar(index));
+    tabuleiroHTML.appendChild(casa);
+  });
+}
+
+function jogar(index) {
+  if (tabuleiro[index] !== "" || !jogoAtivo) return;
+
+  tabuleiro[index] = jogador;
+
+  if (verificarVitoria(jogador)) {
+    status.innerText = "🎉 Você venceu!";
+    jogoAtivo = false;
+    criarTabuleiro();
+    return;
+  }
+
+  if (!tabuleiro.includes("")) {
+    status.innerText = "😐 Empate!";
+    jogoAtivo = false;
+    criarTabuleiro();
+    return;
+  }
+
+  criarTabuleiro();
+  status.innerText = "🤖 IA pensando...";
+
+  setTimeout(jogadaIA, 500);
+}
+
+function jogadaIA() {
+  let melhorJogada = melhorMovimento();
+  tabuleiro[melhorJogada] = ia;
+
+  if (verificarVitoria(ia)) {
+    status.innerText = "💀 IA venceu!";
+    jogoAtivo = false;
+  } else if (!tabuleiro.includes("")) {
+    status.innerText = "😐 Empate!";
+    jogoAtivo = false;
+  } else {
+    status.innerText = "Sua vez (X)";
+  }
+
+  criarTabuleiro();
+}
+
+// IA simples (prioriza ganhar, senão aleatório)
+function melhorMovimento() {
+  // tenta ganhar
+  for (let i = 0; i < 9; i++) {
+    if (tabuleiro[i] === "") {
+      tabuleiro[i] = ia;
+      if (verificarVitoria(ia)) {
+        tabuleiro[i] = "";
+        return i;
+      }
+      tabuleiro[i] = "";
+    }
+  }
+
+  // tenta bloquear jogador
+  for (let i = 0; i < 9; i++) {
+    if (tabuleiro[i] === "") {
+      tabuleiro[i] = jogador;
+      if (verificarVitoria(jogador)) {
+        tabuleiro[i] = "";
+        return i;
+      }
+      tabuleiro[i] = "";
+    }
+  }
+
+  // escolha aleatória
+  let livres = tabuleiro.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+  return livres[Math.floor(Math.random() * livres.length)];
+}
+
+function verificarVitoria(j) {
+  const c = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+
+  return c.some(comb =>
+    tabuleiro[comb[0]] === j &&
+    tabuleiro[comb[1]] === j &&
+    tabuleiro[comb[2]] === j
+  );
+}
+
+function reiniciar() {
+  tabuleiro = ["", "", "", "", "", "", "", "", ""];
+  jogoAtivo = true;
+  status.innerText = "Sua vez (X)";
+  criarTabuleiro();
+}
+
+criarTabuleiro();
+</script>
+
+</body>
+</html>
